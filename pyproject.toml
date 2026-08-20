@@ -1,0 +1,16 @@
+[project]
+name = "groundcheck-mcp"
+version = "0.1.0"
+description = "An MCP connector that verifies a claim's grounding against reality — no LLM in the verification path."
+requires-python = ">=3.10"
+dependencies = ["mcp>=2.0", "httpx>=0.27"]
+
+[project.scripts]
+groundcheck-mcp = "src.groundcheck.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/groundcheck"]
