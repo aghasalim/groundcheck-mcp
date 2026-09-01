@@ -17,6 +17,7 @@ otherwise is the exact failure this tool exists to avoid.
 from __future__ import annotations
 
 import ast
+import math
 import operator
 import re
 import subprocess
@@ -223,12 +224,22 @@ def _reduce_ast(node):
 
 
 def math_holds(expression: str, claimed: float, tol: float = 1e-6) -> Verdict:
-    """Is `expression` actually equal to `claimed` (within tol)?"""
+    """Is `expression` actually equal to `claimed` (within tol)?
+
+    An expression that overflows has no value to compare against, so it is
+    unverifiable rather than refuted. That case is here because a differential
+    test found it: `1e300*1e300` is inf, `abs(inf - claimed) <= tol * inf` is
+    true for every claimed, and the tool used to answer `checked` to any claim
+    at all about an overflowing expression.
+    """
     try:
         actual = _reduce_ast(ast.parse(expression, mode="eval").body)
-    except (ValueError, SyntaxError, ZeroDivisionError) as e:
+        if isinstance(actual, float) and not math.isfinite(actual):
+            raise ValueError("result is not a finite number")
+        holds = abs(actual - claimed) <= tol * max(1.0, abs(actual))
+    except (ValueError, SyntaxError, ZeroDivisionError, OverflowError) as e:
         return Verdict(UNVERIFIABLE, "math_holds", "", f"cannot evaluate: {e}")
-    if abs(actual - claimed) <= tol * max(1.0, abs(actual)):
+    if holds:
         return Verdict(CHECKED, "math_holds", str(actual),
                        f"{expression} = {actual}")
     return Verdict(REFUTED, "math_holds", str(actual),

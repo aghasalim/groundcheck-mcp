@@ -33,6 +33,17 @@ def test_math_rejects_code_execution():
     assert verify.math_holds("__import__('os').getpid()", 1).status == UNVERIFIABLE
 
 
+def test_math_overflow_is_unverifiable_not_checked():
+    """Found by the differential test in verify/, not by me.
+
+    An overflowing expression has no value to compare a claim against. It used
+    to raise on `1e300**2`, and worse, `abs(inf - claimed) <= tol * inf` holds
+    for every claimed, so `1e300*1e300` confirmed any claim at all.
+    """
+    for expression in ("1e300**2", "1e300*1e300", "10**1000"):
+        assert verify.math_holds(expression, 1.0).status == UNVERIFIABLE
+
+
 # --- offline: code --------------------------------------------------------
 def test_code_matching_output_is_checked():
     assert verify.code_prints("print(2+2)", "4").status == CHECKED

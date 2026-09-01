@@ -1,0 +1,12 @@
+id	fixture	needle	status
+t01	page.html	The quick brown fox jumps over the lazy dog.	checked
+t02	page.html	Verification confirms that the evidence a claim rests on is real	checked
+t03	page.html	VERIFICATION   CONFIRMS\nthat the evidence	checked
+t04	page.html	this sentence lives only inside the script block	refuted
+t05	page.html	marker-only-in-css	refuted
+t06	page.html	The quick red fox jumps over the lazy dog.	refuted
+t07	page.html	Punctuation matters because a quote is a quote.	refuted
+t08	page.html	the fox	unverifiable
+t09	plain.txt	No language model is involved in any verdict.	checked
+t10	plain.txt	every result is A STATUS, a method	checked
+t11	plain.txt	no language model is involved in any verdict	checked

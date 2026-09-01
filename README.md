@@ -131,7 +131,7 @@ verification in a source rather than a hunch.
 
 ```bash
 pip install -e .          # or: pip install -r requirements.txt
-python -m pytest tests/   # 18 tests, no network needed (mocked transport)
+python -m pytest tests/   # 19 tests, no network needed (mocked transport)
 ```
 
 **Claude / Claude Code**: add to your MCP config:
@@ -166,6 +166,96 @@ yourself. The other four tools are read-only (HTTP GET, file read, arithmetic).
 `checked`.
 - **arXiv/Crossref only** for citations. Other registries aren't wired up yet.
 
-## 7. Licence
+## 7. Everything here is checked twice
+
+Every verdict this connector returns comes from one implementation,
+`src/groundcheck/verify.py`. The tests in `tests/` import that module and assert
+what I believed the answers were. They are written in the same language, by the
+same person, from the same assumptions, so they cannot catch a mistake in the
+thing they import. A precedence bug in the arithmetic evaluator, or an
+off-by-one in the hit cap, would pass all 19 of them and be published as a
+confirmed fact. That is the failure this project exists to complain about, and I
+had it.
+
+So `verify/export_cases.py` freezes what the Python returns for a fixed table of
+inputs, and the programs below recompute those same verdicts from the same raw
+inputs, in other languages, written from the documented behaviour rather than
+from the Python source. `verify/verify.sh` runs them all and exits non-zero if
+any two disagree. A wrong answer now has to be wrong identically in six
+languages to survive.
+
+```bash
+./verify/verify.sh          # skips any toolchain you do not have
+```
+
+### What each one recomputes
+
+| language | file | recomputes | from | measured agreement |
+|---|---|---|---|---|
+| SQL | `verify/summary.sql` | the case summary table below | the three `cases_*.tsv` | 3 of 3 rows identical |
+| C | `verify/matheval.c` | every `check_math` verdict and value | `cases_math.tsv` | 27 of 27 verdicts, worst value difference 0.0e+00 relative |
+| Go | `verify/gocheck/` | every verdict again, over the real MCP protocol | the live stdio server | 37 of 37 verdicts, worst value difference 0.0e+00 relative |
+| R | `verify/repocheck.R` | every `check_repo` verdict and hit count | `cases_repo.tsv` | 10 of 10 verdicts and counts exact |
+| Rust | `verify/textcheck/` | every `check_quote` verdict, then a property test | `cases_text.tsv` and the fixtures | 11 of 11 verdicts, 321138 rewrapped quotes still match |
+| Node | `verify/mathfuzz.js` | a second parser against the real `check_math` | 200000 random expressions | 181467 agreed, worst value difference 1.7e-9 relative |
+
+The division is deliberate. C takes the arithmetic grammar, because that is the
+one tool here that computes rather than looks something up, so it is the one
+that can be quietly wrong. R takes `check_repo`, because its two fragile
+decisions, escaping a literal pattern and capping the hit count, are invisible
+when they are wrong. Rust takes the text pipeline and then does the part Python
+is too slow to bother with: it pulls phrases out of the fixtures, rewraps them
+with random whitespace and random capitals, and requires every one to still
+match, which is the promise section 6 makes. Node writes a second arithmetic
+parser and asks the real `check_math` whether its own answer agrees, over
+random expressions rather than the ones I thought of. Go is the only one that
+does not reimplement anything: it starts the actual server, does the MCP
+handshake, and replays every case through `tools/call`, because a tool renamed
+or wired to the wrong function would pass every test in this repo and still be
+broken for every host.
+
+Nobody writes the same program twice here. There is no Java or Ruby
+implementation because there is nothing left for one to check: a second copy of
+a kernel that already has two independent implementations proves only that
+somebody can copy.
+
+### The case tables
+
+`verify/export_cases.py` writes these, and they are tracked so that CI can
+corrupt one and require the harness to notice. SQL recomputes this table with a
+group by, and `verify.sh` diffs it against what is printed here.
+
+| table | cases | checked | refuted | unverifiable |
+|---|---|---|---|---|
+| `cases_math.tsv` | 27 | 17 | 3 | 7 |
+| `cases_repo.tsv` | 10 | 6 | 2 | 2 |
+| `cases_text.tsv` | 11 | 6 | 4 | 1 |
+
+### It found a real one
+
+The Node fuzz caught something the 19 tests did not. `check_math` used to hand
+an overflowing expression straight to the comparison, and
+
+    abs(inf - claimed) <= tol * max(1.0, abs(inf))
+
+is true for every `claimed` there is. So `check_math("1e300*1e300", 42)` returned
+**checked**. The tool confirmed an arbitrary claim, which is the one thing it
+exists not to do. `1e300**2` was worse in a quieter way: it raised
+`OverflowError` out of the tool instead of returning a verdict at all. Both are
+now `unverifiable`, which is the honest answer, and a test in
+`tests/test_verify.py` pins it. I did not find this by reading the code. A
+second parser in another language disagreed with the first, and the harness said
+so.
+
+### Regenerating the tables
+
+Only after a deliberate change to the verifiers, and the diff should be read
+line by line, because this is the file every other language is held to.
+
+```bash
+python verify/export_cases.py
+```
+
+## 8. Licence
 
 MIT, see [LICENSE](LICENSE).

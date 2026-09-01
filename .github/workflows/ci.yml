@@ -19,3 +19,36 @@ jobs:
       # The network verifiers are tested against a mock transport, so CI needs
       # no outbound network and cannot flake on an external API.
       - run: python -m pytest tests/ -q
+
+  # Every verdict this repo publishes comes from one implementation. This job
+  # recomputes them in C, Go, R, Rust, Node and SQL and fails if any two
+  # disagree, then corrupts a case table and fails if the harness does not
+  # notice, because a check that cannot fail is not a check.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      # sqlite3, gcc, go, cargo and node are already on the runner. R is not
+      # always, so install it only when it is missing.
+      - name: R, if the runner does not already have it
+        run: |
+          command -v Rscript >/dev/null 2>&1 \
+            || sudo apt-get install -y --no-install-recommends r-base-core
+      - name: recompute everything and require agreement
+        run: ./verify/verify.sh
+      - name: the harness must reject a corrupted case table
+        run: |
+          sed -i '/^m04/s/checked/refuted/' verify/cases_math.tsv
+          if ./verify/verify.sh; then
+            echo "the harness accepted a case table that says 2+3*4 is not 14"
+            exit 1
+          fi
+          echo "rejected as it should be"
+          git checkout -- verify/cases_math.tsv
+      - name: and pass again once it is restored
+        run: ./verify/verify.sh

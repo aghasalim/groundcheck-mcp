@@ -1,0 +1,11 @@
+id	pattern	path	regex	status	hits
+r01	math_holds	src	0	checked	5
+r02	zzz_no_such_token_zzz	src	0	refuted	0
+r03	def check_	src/groundcheck/server.py	0	checked	5
+r04	asdict(self)	src/groundcheck/verify.py	0	checked	1
+r05	REFUTED = 	src/groundcheck/verify.py	0	checked	1
+r06	^class [A-Z]	src/groundcheck/verify.py	1	checked	1
+r07	zzz_no_[a-z]+_zzz	src/groundcheck/verify.py	1	refuted	0
+r08	anything	src/does/not/exist	0	unverifiable	0
+r09	[	src/groundcheck/verify.py	1	unverifiable	0
+r10	import httpx	src/groundcheck/verify.py	0	checked	1
