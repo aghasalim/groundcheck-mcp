@@ -114,6 +114,17 @@ including the network-dependent arXiv lookups. The refutations are real
 refutations rather than illustrations of one, the first row is the`3.7 x 1400`
 error from section 3, reproduced.
 
+### 2.2 The case corpus
+
+`verify/export_cases.py` writes these tables, and they are tracked so that CI
+can corrupt one and require the harness to notice.
+
+| table | cases | checked | refuted | unverifiable |
+|---|---|---|---|---|
+| `cases_math.tsv` | 27 | 17 | 3 | 7 |
+| `cases_repo.tsv` | 10 | 6 | 2 | 2 |
+| `cases_text.tsv` | 11 | 6 | 4 | 1 |
+
 ## 3. It caught a mistake in its own author's work
 
 `check_citation` exists because fabricated-but-plausible arXiv ids kept slipping
