@@ -7,9 +7,10 @@
 An MCP connector that checks whether a claim's **grounding is real**: the quote
 is actually on the page, the arXiv id resolves, the code prints what it's said
 to, the number is right, with **no language model anywhere in the verification
-path**. Works in any MCP host: Claude, Gemini, or another. Every verdict it
-returns is recomputed independently by the programs in `verify/`, and CI fails
-the build if any of them disagrees.
+path**. Works in any MCP host: Claude, Gemini, or another. Every verdict it returns
+is re-derived by the checkers under `verify/`, which run against the same
+fixtures without sharing the server's code. If a re-derivation drifts, the
+build stops.
 
 
 ---
