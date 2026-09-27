@@ -31,8 +31,7 @@ checkable, "the page's argument is correct" is not, and it returns`unverifiable`
 
 No language model is involved in any verdict.
 
-Contributions. (i) Verification grounded in sources, not in a second
-model's opinion. (ii) A three-verdict contract with an explicit`unverifiable`, so
+Contributions. (i) Verification grounded in sources. (ii) A three-verdict contract with an explicit`unverifiable`, so
 refusal is a first-class outcome. (iii) Auditable results, every verdict carries
 the quote, stdout, matching line or computed value it was based on.
 
@@ -102,8 +101,7 @@ that can be looked up, executed or computed.
 |`check_math(expression, claimed_result)` | arithmetic is correct | evaluate an AST (no`eval`), compare |
 
 Every result is`{status, method, evidence, detail}``evidence` is the concrete
-thing found (the quote, the stdout, the matching line, the computed value), so a
-verdict is auditable, not a black box.
+thing found (the quote, the stdout, the matching line, the computed value), so a verdict is auditable.
 
 ### 2.1 A live run
 
