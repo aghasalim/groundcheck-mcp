@@ -18,7 +18,7 @@ build stops.
 ## Abstract
 
 Assistant "fact-checking" almost always means asking a second model whether the
-first was right. That relocates the error rather than removing it, because the
+first was right. That relocates the error instead of removing it, because the
 checker hallucinates too. This is an MCP connector that verifies grounding against
 reality instead: five tools that fetch a page, resolve an identifier, execute a
 snippet, grep a codebase or evaluate an expression, and return one of three
@@ -28,11 +28,11 @@ The scope is deliberately narrow and stated as such. Groundcheck confirms that t
 evidence a claim rests on is real and says what it is quoted to say. It does not
 judge whether a claim is semantically true, "this quote is on the cited page" is
 checkable, "the page's argument is correct" is not, and it returns`unverifiable`
-rather than guessing.
+instead of guessing.
 
 No language model is involved in any verdict.
 
-**Contributions.** (i) Verification grounded in sources rather than in a second
+Contributions. (i) Verification grounded in sources, not in a second
 model's opinion. (ii) A three-verdict contract with an explicit`unverifiable`, so
 refusal is a first-class outcome. (iii) Auditable results, every verdict carries
 the quote, stdout, matching line or computed value it was based on.
@@ -44,10 +44,10 @@ the quote, stdout, matching line or computed value it was based on.
 Every "fact-check" built into an assistant today ultimately asks *a second model*
 whether the first one was right. That doesn't verify anything, it relocates the
 error, because the checker hallucinates too. The genuinely hard, under-attempted
-thing is verification grounded in **reality** rather than in another model's
+thing is verification grounded in **reality**, not in another model's
 opinion. That's all this does, and it does only that.
 
-**Scope, stated honestly, because over-claiming would defeat the point.**
+Scope, stated honestly, because over-claiming would defeat the point.
 Groundcheck confirms that the *evidence* a claim rests on is real and says what
 it's quoted to say. It does **not** judge whether a claim is semantically true
 "this quote is on the cited page" is checkable; "the page's argument is correct"
@@ -112,7 +112,7 @@ verdict is auditable, not a black box.
 
 Every row above is an actual call to the same function the server exposes,
 including the network-dependent arXiv lookups. The refutations are real
-refutations rather than illustrations of one, the first row is the`3.7 x 1400`
+refutations instead of illustrations of one, the first row is the`3.7 x 1400`
 error from section 3, reproduced.
 
 ### 2.2 The case corpus
@@ -139,7 +139,7 @@ There's one honest wrinkle worth reporting: while testing, I assumed arXiv
 `2606.01992` was fabricated and expected`refuted`, the tool returned`checked`.
 **The tool was right and I was wrong**: it's a real June-2026 paper. The verifier
 did its job against my own bad assumption, which is the entire reason to ground
-verification in a source rather than a hunch.
+verification in a source instead of a hunch.
 
 ## 4. Use it
 
@@ -171,9 +171,9 @@ yourself. The other four tools are read-only (HTTP GET, file read, arithmetic).
 
 ## 6. Limitations
 
-**Grounding, not truth.** By design, see Scope above.
+Grounding, not truth. By design, see Scope above.
 
-**Quote matching is exact (whitespace-normalised).** A paraphrase that means
+Quote matching is exact (whitespace-normalised). A paraphrase that means
 the same thing returns`refuted`, because "means the same" needs a judge and a
 judge is what this tool refuses to be. Match the literal text.
 
