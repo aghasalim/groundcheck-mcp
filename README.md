@@ -18,7 +18,7 @@ build stops.
 ## Abstract
 
 Assistant "fact-checking" almost always means asking a second model whether the
-first was right. That relocates the error instead of removing it, because the
+first was right. That only moves the error somewhere else, because the
 checker hallucinates too. This is an MCP connector that verifies grounding against
 reality instead: five tools that fetch a page, resolve an identifier, execute a
 snippet, grep a codebase or evaluate an expression, and return one of three
@@ -27,8 +27,7 @@ verdicts with the concrete evidence attached.
 The scope is deliberately narrow and stated as such. Groundcheck confirms that the
 evidence a claim rests on is real and says what it is quoted to say. It does not
 judge whether a claim is semantically true, "this quote is on the cited page" is
-checkable, "the page's argument is correct" is not, and it returns`unverifiable`
-instead of guessing.
+checkable, "the page's argument is correct" is not, and it returns`unverifiable` when it cannot tell.
 
 No language model is involved in any verdict.
 
@@ -47,12 +46,12 @@ error, because the checker hallucinates too. The genuinely hard, under-attempted
 thing is verification grounded in **reality**, not in another model's
 opinion. That's all this does, and it does only that.
 
-Scope, stated honestly, because over-claiming would defeat the point.
+Scope, because over-claiming would defeat the point.
 Groundcheck confirms that the *evidence* a claim rests on is real and says what
 it's quoted to say. It does **not** judge whether a claim is semantically true
 "this quote is on the cited page" is checkable; "the page's argument is correct"
 is not, and no amount of pretending makes it so. Every tool returns one of three
-verdicts, and it says`unverifiable` rather than guess:
+verdicts, and when it cannot tell it says`unverifiable`:
 
 | verdict | meaning |
 |---|---|
@@ -111,8 +110,7 @@ verdict is auditable, not a black box.
 ![real verdicts from a live run](docs/verdicts.png)
 
 Every row above is an actual call to the same function the server exposes,
-including the network-dependent arXiv lookups. The refutations are real
-refutations instead of illustrations of one, the first row is the`3.7 x 1400`
+including the network-dependent arXiv lookups. The refutations are real ones, the first row is the`3.7 x 1400`
 error from section 3, reproduced.
 
 ### 2.2 The case corpus
@@ -135,11 +133,10 @@ into research write-ups, an id that looks right and resolves to nothing.
 that verifies every quoted number against its source repo. Each tool is a failure
 that actually happened, turned into a check.
 
-There's one honest wrinkle worth reporting: while testing, I assumed arXiv
+One wrinkle: while testing, I assumed arXiv
 `2606.01992` was fabricated and expected`refuted`, the tool returned`checked`.
 **The tool was right and I was wrong**: it's a real June-2026 paper. The verifier
-did its job against my own bad assumption, which is the entire reason to ground
-verification in a source instead of a hunch.
+did its job against my own bad assumption, which is the entire reason to ground verification in a source.
 
 ## 4. Use it
 
