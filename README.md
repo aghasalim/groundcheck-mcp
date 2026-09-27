@@ -3,6 +3,7 @@
 [![ci](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23003639.svg)](https://doi.org/10.5281/zenodo.23003639)
 
 An MCP connector that checks whether a claim's **grounding is real**: the quote
 is actually on the page, the arXiv id resolves, the code prints what it's said
