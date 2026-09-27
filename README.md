@@ -171,12 +171,15 @@ yourself. The other four tools are read-only (HTTP GET, file read, arithmetic).
 
 ## 6. Limitations
 
-- **Grounding, not truth.** By design, see Scope above.
-- **Quote matching is exact (whitespace-normalised).** A paraphrase that means
-  the same thing returns`refuted`, because "means the same" needs a judge and a
-  judge is what this tool refuses to be. Match the literal text.
-- **JS-rendered pages.**`check_quote` reads the served HTML; a quote injected by
-  client-side JavaScript won't be found. It fails safe (`refuted`), never a false
+**Grounding, not truth.** By design, see Scope above.
+
+**Quote matching is exact (whitespace-normalised).** A paraphrase that means
+the same thing returns`refuted`, because "means the same" needs a judge and a
+judge is what this tool refuses to be. Match the literal text.
+
+**JS-rendered pages.**`check_quote` reads the served HTML; a quote injected by
+client-side JavaScript won't be found. It fails safe (`refuted`), never a false
+
 `checked`.
 - **arXiv/Crossref only** for citations. Other registries aren't wired up yet.
 
