@@ -208,7 +208,7 @@ _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
         ast.USub: operator.neg, ast.UAdd: operator.pos, ast.FloorDiv: operator.floordiv}
 
 
-def _reduce_ast(node):
+def _reduce_ast(node: ast.expr) -> int | float:
     """Walk an arithmetic AST to a number. Only numeric literals and the
     operators in _OPS are permitted -- no names, no calls, no attribute access.
     This is the safe alternative to Python's builtin evaluator: 'math' can be
