@@ -10,7 +10,6 @@ The load-bearing property throughout: a false claim must return `refuted`, not
 it launders a hallucination into a confirmation.
 """
 import httpx
-import pytest
 
 from src.groundcheck import verify
 from src.groundcheck.verify import CHECKED, REFUTED, UNVERIFIABLE
