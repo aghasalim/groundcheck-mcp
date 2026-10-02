@@ -15,10 +15,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - run: pip install -r requirements.txt pytest
+      - name: Install
+        run: pip install -r requirements.txt pytest
       # The network verifiers are tested against a mock transport, so CI needs
       # no outbound network and cannot flake on an external API.
-      - run: python -m pytest tests/ -q
+      - name: Test
+        run: python -m pytest tests/ -q
 
   # Every verdict this repo publishes comes from one implementation. This job
   # recomputes them in C, Go, R, Rust, Node and SQL and fails if any two
@@ -32,7 +34,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      - name: Install
+        run: pip install -r requirements.txt
       # sqlite3, gcc, go, cargo and node are already on the runner. R is not
       # always, so install it only when it is missing.
       - name: R, if the runner does not already have it
