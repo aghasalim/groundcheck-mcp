@@ -213,6 +213,9 @@ _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
         ast.USub: operator.neg, ast.UAdd: operator.pos, ast.FloorDiv: operator.floordiv}
 
 
+_MAX_POW_BITS = 1_000_000
+
+
 def _reduce_ast(node: ast.expr) -> int | float:
     """Walk an arithmetic AST to a number. Only numeric literals and the
     operators in _OPS are permitted -- no names, no calls, no attribute access.
@@ -222,7 +225,15 @@ def _reduce_ast(node: ast.expr) -> int | float:
     if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
         return node.value
     if isinstance(node, ast.BinOp) and type(node.op) in _OPS:
-        return _OPS[type(node.op)](_reduce_ast(node.left), _reduce_ast(node.right))
+        left, right = _reduce_ast(node.left), _reduce_ast(node.right)
+        # Integer ** is exact and unbounded, so 9**9**9 would sit computing a
+        # 370 million digit number and hang the server. Anything past a million
+        # bits overflows a float anyway, so it could never be compared.
+        if (isinstance(node.op, ast.Pow) and isinstance(left, int)
+                and isinstance(right, int) and abs(left) > 1
+                and right * abs(left).bit_length() > _MAX_POW_BITS):
+            raise ValueError("exponent too large to evaluate")
+        return _OPS[type(node.op)](left, right)
     if isinstance(node, ast.UnaryOp) and type(node.op) in _OPS:
         return _OPS[type(node.op)](_reduce_ast(node.operand))
     raise ValueError("only numeric literals and + - * / // % ** are allowed")
