@@ -44,6 +44,16 @@ def test_math_overflow_is_unverifiable_not_checked():
 
 
 # --- offline: code --------------------------------------------------------
+def test_math_huge_exponent_is_refused_not_hung():
+    """9**9**9 is a 370 million digit integer; it used to hang the server."""
+    import time
+    t = time.perf_counter()
+    assert verify.math_holds("9**9**9", 0).status == UNVERIFIABLE
+    assert verify.math_holds("(-7)**10**8", 1).status == UNVERIFIABLE
+    assert time.perf_counter() - t < 1.0
+    assert verify.math_holds("2**64", 18446744073709551616).status == CHECKED
+
+
 def test_code_matching_output_is_checked():
     assert verify.code_prints("print(2+2)", "4").status == CHECKED
 
