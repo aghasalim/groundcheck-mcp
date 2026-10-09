@@ -141,7 +141,7 @@ did its job against my own bad assumption, which is the entire reason to ground 
 
 ```bash
 pip install -e .          # or: pip install -r requirements.txt
-python -m pytest tests/   # 21 tests, no network needed (mocked transport)
+python -m pytest tests/   # 22 tests, no network needed (mocked transport)
 ```
 
 **Claude / Claude Code**: add to your MCP config:
