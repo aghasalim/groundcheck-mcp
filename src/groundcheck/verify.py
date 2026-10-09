@@ -103,8 +103,12 @@ def citation_resolves(identifier: str, timeout: float = 20.0,
                                     headers={"user-agent": "groundcheck/1.0"})
     ident = identifier.strip()
     try:
-        m = re.search(r"(\d{4}\.\d{4,5})", ident)
-        if m or ident.lower().startswith("arxiv"):
+        # A DOI like 10.1145/3292500.3330701 contains "2500.33307", which
+        # looks like an arXiv id, so DOIs are recognised before arXiv is tried.
+        low = ident.lower()
+        is_doi = low.startswith(("10.", "doi:")) or "doi.org/" in low
+        m = None if is_doi else re.search(r"(\d{4}\.\d{4,5})", ident)
+        if m or (not is_doi and low.startswith("arxiv")):
             arxiv_id = m.group(1) if m else ident.split(":")[-1]
             r = client.get("https://export.arxiv.org/api/query",
                            params={"id_list": arxiv_id, "max_results": 1},

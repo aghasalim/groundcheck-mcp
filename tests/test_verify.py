@@ -136,3 +136,18 @@ def test_fabricated_arxiv_id_is_refuted():
 def test_non_identifier_is_unverifiable():
     c = _client(lambda req: httpx.Response(200, text=""))
     assert verify.citation_resolves("just some words", client=c).status == UNVERIFIABLE
+
+
+def test_doi_with_arxiv_like_digits_goes_to_crossref():
+    """10.1145/3292500.3330701 contains "2500.33307"; it must not be sent to arXiv."""
+    seen = []
+
+    def handler(req):
+        seen.append(req.url.host)
+        if req.url.host == "api.crossref.org":
+            return httpx.Response(200, json={"message": {"title": ["A KDD paper"]}})
+        return httpx.Response(200, text=_ARXIV_MISS)
+
+    v = verify.citation_resolves("10.1145/3292500.3330701", client=_client(handler))
+    assert v.status == CHECKED and v.method == "citation_resolves[doi]"
+    assert seen == ["api.crossref.org"]
