@@ -160,3 +160,17 @@ def test_doi_with_arxiv_like_digits_goes_to_crossref():
     v = verify.citation_resolves("10.1145/3292500.3330701", client=_client(handler))
     assert v.status == CHECKED and v.method == "citation_resolves[doi]"
     assert seen == ["api.crossref.org"]
+
+
+def test_console_script_points_at_the_shipped_package():
+    """The wheel ships `groundcheck`, not `src.groundcheck`, so the entry point
+    has to name a module that exists under src/."""
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    target = re.search(r'groundcheck-mcp = "([\w.]+):(\w+)"',
+                       (root / "pyproject.toml").read_text())
+    module, func = target.groups()
+    path = root.joinpath("src", *module.split(".")).with_suffix(".py")
+    assert path.is_file(), f"{module} is not a module in the wheel"
+    assert f"def {func}(" in path.read_text()
