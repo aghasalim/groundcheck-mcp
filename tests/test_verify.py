@@ -105,6 +105,15 @@ def test_quote_matches_across_whitespace_and_tags():
     assert v.status == CHECKED
 
 
+def test_quote_matches_through_html_entities():
+    """A real quote with an apostrophe, served as &#8217; and &amp;, still matches."""
+    c = _client(lambda req: httpx.Response(
+        200, text="<p>It&#8217;s the model&rsquo;s fault &amp; nobody else&#39;s</p>"))
+    v = verify.quote_on_page("It\u2019s the model\u2019s fault & nobody else's",
+                             "https://x.test", client=c)
+    assert v.status == CHECKED
+
+
 def test_quote_too_short_is_refused():
     c = _client(lambda req: httpx.Response(200, text="a b"))
     assert verify.quote_on_page("a b", "https://x.test", client=c).status == UNVERIFIABLE
