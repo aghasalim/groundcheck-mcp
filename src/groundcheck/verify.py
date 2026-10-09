@@ -17,6 +17,7 @@ otherwise is the exact failure this tool exists to avoid.
 from __future__ import annotations
 
 import ast
+import html
 import math
 import operator
 import re
@@ -76,7 +77,7 @@ def quote_on_page(quote: str, url: str, timeout: float = 20.0,
                            "", f"page returned HTTP {r.status_code}")
         text = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", r.text,
                       flags=re.S | re.I)
-        text = re.sub(r"<[^>]+>", " ", text)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", text))
         if _norm(quote) in _norm(text):
             return Verdict(CHECKED, "quote_on_page",
                            quote.strip(), f"found in {url}")
