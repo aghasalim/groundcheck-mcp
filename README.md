@@ -5,53 +5,56 @@
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23003639.svg)](https://doi.org/10.5281/zenodo.23003639)
 
-An MCP connector that checks whether a claim's **grounding is real**: the quote
-is actually on the page, the arXiv id resolves, the code prints what it's said
-to, the number is right, with **no language model anywhere in the verification
-path**. Works in any MCP host: Claude, Gemini, or another. Every verdict it returns
-is re-derived by the checkers under `verify/`, which run against the same
-fixtures without sharing the server's code. If a re-derivation drifts, the
-build stops.
+I built this MCP connector to check whether the grounding behind a claim is
+real. Is the quote actually on the page? Does the arXiv id resolve? Does the
+code print what someone says it prints, and is the number right? There's no
+language model anywhere in the verification path. It works in any MCP host, so
+Claude, Gemini or something else. The checkers under `verify/` re-derive every
+verdict it returns. They run against the same fixtures and don't share the
+server's code. If a re-derivation drifts, the build stops.
 
 
 ---
 
 ## Abstract
 
-Assistant "fact-checking" almost always means asking a second model whether the
-first was right. That only moves the error somewhere else, because the
-checker hallucinates too. This is an MCP connector that verifies grounding against
-reality instead: five tools that fetch a page, resolve an identifier, execute a
-snippet, grep a codebase or evaluate an expression, and return one of three
-verdicts with the concrete evidence attached.
+When an assistant "fact-checks" something, it almost always asks a second
+model whether the first one was right. That just moves the error somewhere
+else, since the checker hallucinates too. I wanted to check grounding against
+reality instead. Groundcheck has five tools. They fetch a page, resolve an
+identifier, run a snippet, grep a codebase or evaluate an expression. Each one
+returns one of three verdicts with the evidence attached.
 
-The scope is deliberately narrow and stated as such. Groundcheck confirms that the
-evidence a claim rests on is real and says what it is quoted to say. It does not
-judge whether a claim is semantically true, "this quote is on the cited page" is
-checkable, "the page's argument is correct" is not, and it returns`unverifiable` when it cannot tell.
+I kept the scope narrow on purpose. Groundcheck confirms that the evidence a
+claim rests on is real and says what it's quoted to say. It doesn't judge
+whether a claim is semantically true. "This quote is on the cited page" can be
+checked. "The page's argument is correct" can't. When it can't tell, it
+returns `unverifiable`.
 
 No language model is involved in any verdict.
 
-Contributions. (i) Verification grounded in sources. (ii) A three-verdict contract with an explicit`unverifiable`, so
-refusal is a first-class outcome. (iii) Auditable results, every verdict carries
-the quote, stdout, matching line or computed value it was based on.
+Contributions. (i) Verification grounded in sources. (ii) A three-verdict
+contract with an explicit `unverifiable`, so refusing to answer is a proper
+outcome. (iii) Results you can audit, since every verdict carries the quote,
+stdout, matching line or computed value it was based on.
 
 ---
 
 ## 1. Why this, and why it's hard
 
-Every "fact-check" built into an assistant today ultimately asks *a second model*
-whether the first one was right. That doesn't verify anything, it relocates the
-error, because the checker hallucinates too. The genuinely hard, under-attempted
-thing is verification grounded in **reality**, not in another model's
-opinion. That's all this does, and it does only that.
+Almost every "fact-check" built into an assistant today ends up asking *a
+second model* whether the first one was right. That doesn't really verify
+anything. The checker hallucinates too, so the error just ends up in a
+different place. Checking against reality instead of another model's opinion
+is the hard part, and few tools attempt it. That's the only thing this one
+does.
 
-Scope, because over-claiming would defeat the point.
-Groundcheck confirms that the *evidence* a claim rests on is real and says what
-it's quoted to say. It does **not** judge whether a claim is semantically true
-"this quote is on the cited page" is checkable; "the page's argument is correct"
-is not, and no amount of pretending makes it so. Every tool returns one of three
-verdicts, and when it cannot tell it says`unverifiable`:
+I want to be careful about scope, since over-claiming would undercut the whole
+idea. Groundcheck confirms that the *evidence* a claim rests on is real and
+says what it's quoted to say. It doesn't judge whether a claim is semantically
+true. "This quote is on the cited page" is checkable. "The page's argument is
+correct" isn't, and pretending won't change that. Every tool returns one of
+three verdicts. When it can't tell, it says `unverifiable`.
 
 | verdict | meaning |
 |---|---|
@@ -88,8 +91,8 @@ flowchart LR
     class UNK warn
 ```
 
-No box in that diagram is a language model. Every verdict terminates at something
-that can be looked up, executed or computed.
+None of the boxes in that diagram is a language model. Every verdict ends at
+something you can look up, run or compute.
 
 ## 2. The tools
 
@@ -101,21 +104,22 @@ that can be looked up, executed or computed.
 |`check_repo(pattern, path)` | a string/regex is in a codebase | grep the files, return real matching lines |
 |`check_math(expression, claimed_result)` | arithmetic is correct | evaluate an AST (no`eval`), compare |
 
-Every result is`{status, method, evidence, detail}``evidence` is the concrete
-thing found (the quote, the stdout, the matching line, the computed value), so a verdict is auditable.
+Every result has the shape `{status, method, evidence, detail}`. The
+`evidence` field holds whatever was actually found, like the quote, the stdout,
+the matching line or the computed value. That's what makes a verdict auditable.
 
 ### 2.1 A live run
 
 ![real verdicts from a live run](docs/verdicts.png)
 
-Every row above is an actual call to the same function the server exposes,
-including the network-dependent arXiv lookups. The refutations are real ones, the first row is the`3.7 x 1400`
-error from section 3, reproduced.
+Each row above is a real call to the same function the server exposes. That
+includes the arXiv lookups that need the network. The refutations are real
+too. The first row is the `3.7 x 1400` error from section 3, reproduced.
 
 ### 2.2 The case corpus
 
-`verify/export_cases.py` writes these tables, and they are tracked so that CI
-can corrupt one and require the harness to notice.
+`verify/export_cases.py` writes these tables. I keep them tracked in git so CI
+can corrupt one and make sure the harness notices.
 
 | table | cases | checked | refuted | unverifiable |
 |---|---|---|---|---|
@@ -125,17 +129,18 @@ can corrupt one and require the harness to notice.
 
 ## 3. It caught a mistake in its own author's work
 
-`check_citation` exists because fabricated-but-plausible arXiv ids kept slipping
-into research write-ups, an id that looks right and resolves to nothing.
-`check_math` exists because`3.7 × 1400` was written as`8880` in a hardware deck
-(it's 5180).`check_repo` is the generalisation of a profile-README claim-checker
-that verifies every quoted number against its source repo. Each tool is a failure
-that actually happened, turned into a check.
+I wrote `check_citation` because made-up arXiv ids that looked plausible kept
+slipping into research write-ups. They look right and resolve to nothing.
+`check_math` exists because `3.7 × 1400` was written as `8880` in a hardware
+deck. It's actually 5180. `check_repo` grew out of a claim-checker for my
+profile README that compares every quoted number with the repo it came from.
+So each tool started as a mistake that really happened.
 
-One wrinkle: while testing, I assumed arXiv
-`2606.01992` was fabricated and expected`refuted`, the tool returned`checked`.
-**The tool was right and I was wrong**: it's a real June-2026 paper. The verifier
-did its job against my own bad assumption, which is the entire reason to ground verification in a source.
+One thing surprised me. While testing, I assumed arXiv `2606.01992` was
+fabricated and expected `refuted`. The tool returned `checked`. It was right
+and I was wrong, because it's a real June-2026 paper. The verifier caught my
+own bad assumption, and that's exactly why I wanted verification grounded in a
+source.
 
 ## 4. Use it
 
@@ -144,7 +149,7 @@ pip install -e .          # or: pip install -r requirements.txt
 python -m pytest tests/   # 23 tests, no network needed (mocked transport)
 ```
 
-**Claude / Claude Code**: add to your MCP config:
+For Claude or Claude Code, add this to your MCP config.
 
 ```json
 {
@@ -154,30 +159,33 @@ python -m pytest tests/   # 23 tests, no network needed (mocked transport)
 }
 ```
 
-**Gemini CLI / any MCP host**: same stdio server; point your host's MCP config
-at`python -m src.groundcheck.server`. MCP is the reason one connector serves
-both.
+For Gemini CLI or any other MCP host, it's the same stdio server. Point your
+host's MCP config at `python -m src.groundcheck.server`. MCP is why one
+connector can serve both.
 
 ## 5. Security
 
-`check_code` **executes the code you give it** in a subprocess. It uses list-form
-`subprocess` (no shell, so nothing to inject) and kills on timeout, but it is
-**not** sandboxed from the network or filesystem. Only pass code you would run
-yourself. The other four tools are read-only (HTTP GET, file read, arithmetic).
+`check_code` runs the code you give it in a subprocess. It uses list-form
+`subprocess`, so there's no shell and nothing to inject, and it kills the
+process on timeout. It isn't sandboxed from the network or the filesystem,
+though. Only pass code you'd run yourself. The other four tools are read-only
+(HTTP GET, file read, arithmetic).
 
 ## 6. Limitations
 
-Grounding, not truth. By design, see Scope above.
+This checks grounding. It doesn't check truth, and that's by design (see Scope
+above).
 
-Quote matching is exact (whitespace-normalised). A paraphrase that means
-the same thing returns`refuted`, because "means the same" needs a judge and a
-judge is what this tool refuses to be. Match the literal text.
+Quote matching is exact, apart from normalising whitespace. A paraphrase that
+means the same thing returns `refuted`. Deciding that two sentences "mean the
+same" needs a judge, and this tool refuses to be one. Match the literal text.
 
-**JS-rendered pages.**`check_quote` reads the served HTML; a quote injected by
-client-side JavaScript won't be found. It fails safe (`refuted`), never a false
+`check_quote` reads the served HTML, so it won't find a quote on a JS-rendered
+page that client-side JavaScript injects. It fails safe with `refuted` and
+never gives a false `checked`.
 
-`checked`.
-- **arXiv/Crossref only** for citations. Other registries aren't wired up yet.
+Citations only go through arXiv and Crossref. Other registries aren't wired up
+yet.
 
 ## 7. Licence
 
