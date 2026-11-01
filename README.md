@@ -127,6 +127,14 @@ can corrupt one and make sure the harness notices.
 | `cases_repo.tsv` | 10 | 6 | 2 | 2 |
 | `cases_text.tsv` | 11 | 6 | 4 | 1 |
 
+![verdict split of the case tables](docs/cases.png)
+
+The same three tables as bars, counted from the TSV files. Every table has cases for all three verdicts.
+
+![how verify/verify.sh recomputes the verdicts](docs/harness.png)
+
+`verify/verify.sh` recomputes these verdicts in SQL, C, Go, R, Rust and Node, without sharing the server's code. The build stops if any of them disagrees.
+
 ## 3. It caught a mistake in its own author's work
 
 I wrote `check_citation` because made-up arXiv ids that looked plausible kept

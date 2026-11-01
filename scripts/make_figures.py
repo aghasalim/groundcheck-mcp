@@ -11,6 +11,7 @@ rather than a quietly different picture.
 
 from __future__ import annotations
 
+import csv
 import sys
 from pathlib import Path
 
@@ -104,9 +105,96 @@ def verdicts(out: Path) -> Path:
     return out
 
 
+def case_corpus(out: Path) -> Path:
+    """Verdict split of the tracked case tables, counted straight from the TSVs."""
+    tables = [("check_math", "cases_math.tsv"), ("check_repo", "cases_repo.tsv"),
+              ("check_quote", "cases_text.tsv")]
+    order = ["checked", "refuted", "unverifiable"]
+    figure, ax = plt.subplots(figsize=(7, 2.8))
+    for row, (tool, name) in enumerate(reversed(tables)):
+        with open(ROOT / "verify" / name, newline="") as fh:
+            statuses = [r["status"] for r in csv.DictReader(fh, delimiter="\t")]
+        left = 0
+        for status in order:
+            n = statuses.count(status)
+            if n:
+                ax.barh(row, n, left=left, color=STATUS_COLOURS[status], height=0.6)
+                ax.text(left + n / 2, row, str(n), ha="center", va="center",
+                        color="white", fontsize=9, fontweight="bold")
+            left += n
+        ax.text(left + 0.4, row, f"{len(statuses)} cases", va="center", fontsize=8, color="0.4")
+    ax.set_yticks(range(len(tables)))
+    ax.set_yticklabels([f"{t}\n{n}" for t, n in reversed(tables)], family="monospace", fontsize=8)
+    ax.set_xlabel("cases")
+    ax.set_xlim(0, 31)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=STATUS_COLOURS[st]) for st in order]
+    ax.legend(handles, order, ncol=3, frameon=False, fontsize=8, loc="lower right", bbox_to_anchor=(1, 1))
+    figure.tight_layout()
+    figure.savefig(out, dpi=150, bbox_inches="tight")
+    plt.close(figure)
+    return out
+
+
+def harness(out: Path) -> Path:
+    """How verify/verify.sh holds the one Python implementation to account."""
+    figure, ax = plt.subplots(figsize=(9, 4.6))
+    ax.axis("off")
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 7)
+
+    def box(x, y, w, h, text, fc="#f2f2f2", ec="0.55", size=8, mono=False, color="0.15"):
+        ax.add_patch(plt.Rectangle((x, y), w, h, facecolor=fc, edgecolor=ec, lw=0.8))
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=size,
+                color=color, family="monospace" if mono else None)
+
+    def arrow(x0, y0, x1, y1):
+        ax.annotate("", (x1, y1), (x0, y0),
+                    arrowprops=dict(arrowstyle="->", color="0.45", lw=0.8))
+
+    box(0.1, 4.6, 2.2, 1.0, "src/groundcheck/verify.py\nthe one implementation", mono=True)
+    box(0.1, 2.9, 2.2, 1.0, "verify/export_cases.py\nfreezes its verdicts", mono=True)
+    arrow(1.2, 4.6, 1.2, 3.9)
+    tables = ["cases_math.tsv  27", "cases_repo.tsv  10", "cases_text.tsv  11"]
+    for i, t in enumerate(tables):
+        box(0.1, 1.9 - i * 0.6, 2.2, 0.5, t, fc="white", mono=True)
+    arrow(1.2, 2.9, 1.2, 2.4)
+
+    checks = [
+        ("SQL", "README case summary = GROUP BY over the tables"),
+        ("C", "re-implements the check_math grammar, 27 verdicts"),
+        ("Go", "drives the real MCP server over stdio, replays cases"),
+        ("R", "check_repo verdicts and hit counts, 10 cases"),
+        ("Rust", "check_quote text pipeline, 11 cases + rewrap fuzz"),
+        ("Node", "random-expression fuzz against check_math"),
+    ]
+    for i, (lang, what) in enumerate(checks):
+        y = 6.0 - i * 1.0
+        box(3.2, y, 0.8, 0.6, lang, fc="#4d4d4d", ec="#2b2b2b", color="white", size=9)
+        ax.text(4.15, y + 0.3, what, va="center", fontsize=8, color="0.25")
+        arrow(2.3, 1.4, 3.2, y + 0.3)
+        arrow(8.0, y + 0.3, 8.35, 3.5)
+
+    box(8.35, 3.75, 1.55, 0.9, "all agree\nCI passes", fc=STATUS_COLOURS["checked"],
+        ec="#0f6b33", color="white", size=9)
+    box(8.35, 2.35, 1.55, 0.9, "any differs\nbuild stops", fc=STATUS_COLOURS["refuted"],
+        ec="#7f0f20", color="white", size=9)
+    ax.text(0.1, 0.05, "CI also flips m04 (2+3*4 = 14) to refuted and requires the harness to fail. "
+            "No language model in any step.", fontsize=8, color="0.4")
+    ax.set_title("verify/verify.sh: every published verdict recomputed in six other languages",
+                 fontsize=10, loc="left")
+    figure.tight_layout()
+    figure.savefig(out, dpi=150, bbox_inches="tight")
+    plt.close(figure)
+    return out
+
+
 def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
     print(f"-> {verdicts(FIGURES / 'verdicts.png').relative_to(ROOT)}")
+    print(f"-> {case_corpus(FIGURES / 'cases.png').relative_to(ROOT)}")
+    print(f"-> {harness(FIGURES / 'harness.png').relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
