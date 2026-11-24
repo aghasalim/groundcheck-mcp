@@ -1,5 +1,3 @@
-<p align="center"><img src="assets/banner.jpg" alt="Line drawing of a plug joining a speech bubble to a checklist of sources, with one cross among the check marks" width="100%"></p>
-
 # Groundcheck, verification with no model in the loop
 
 [![ci](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml)
