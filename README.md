@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.jpg" alt="Line drawing of a plug joining a speech bubble to a checklist of sources, with one cross among the check marks" width="100%"></p>
+
 # Groundcheck, verification with no model in the loop
 
 [![ci](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/groundcheck-mcp/actions/workflows/ci.yml)
@@ -15,6 +17,21 @@ server's code. If a re-derivation drifts, the build stops.
 
 
 ---
+
+<details>
+<summary>Contents</summary>
+
+- [Abstract](#abstract)
+- [1. Why this, and why it's hard](#1-why-this-and-why-its-hard)
+- [2. The tools](#2-the-tools)
+- [3. It caught a mistake in its own author's work](#3-it-caught-a-mistake-in-its-own-authors-work)
+- [4. Use it](#4-use-it)
+- [5. Security](#5-security)
+- [6. Limitations](#6-limitations)
+- [7. Licence](#7-licence)
+- [Citation](#citation)
+
+</details>
 
 ## Abstract
 
@@ -198,3 +215,18 @@ yet.
 ## 7. Licence
 
 MIT, see [LICENSE](LICENSE).
+
+## Citation
+
+If you use this work, please cite it. The same record is in [`CITATION.cff`](CITATION.cff).
+
+```bibtex
+@software{mustafazada2026groundcheckmcp,
+  author  = {Mustafazada, Aghasalim},
+  title   = {Groundcheck: grounded verification with no model in the loop},
+  year    = {2026},
+  version = {1.0.1},
+  doi     = {10.5281/zenodo.23003639},
+  url     = {https://github.com/aghasalim/groundcheck-mcp}
+}
+```
