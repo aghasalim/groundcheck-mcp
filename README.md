@@ -20,13 +20,12 @@ server's code. If a re-derivation drifts, the build stops.
 <summary>Contents</summary>
 
 - [Abstract](#abstract)
-- [1. Why this, and why it's hard](#1-why-this-and-why-its-hard)
+- [1. The three verdicts](#1-the-three-verdicts)
 - [2. The tools](#2-the-tools)
-- [3. It caught a mistake in its own author's work](#3-it-caught-a-mistake-in-its-own-authors-work)
-- [4. Use it](#4-use-it)
-- [5. Security](#5-security)
-- [6. Limitations](#6-limitations)
-- [7. Licence](#7-licence)
+- [3. Use it](#3-use-it)
+- [4. Security](#4-security)
+- [5. Limitations](#5-limitations)
+- [6. Licence](#6-licence)
 - [Citation](#citation)
 
 </details>
@@ -53,23 +52,12 @@ contract with an explicit `unverifiable`, so refusing to answer is a proper
 outcome. (iii) Results you can audit, since every verdict carries the quote,
 stdout, matching line or computed value it was based on.
 
+Why I built it this way, and the mistakes each tool came from, are in
+[docs/background.md](docs/background.md).
+
 ---
 
-## 1. Why this, and why it's hard
-
-Almost every "fact-check" built into an assistant today ends up asking *a
-second model* whether the first one was right. That doesn't really verify
-anything. The checker hallucinates too, so the error just ends up in a
-different place. Checking against reality instead of another model's opinion
-is the hard part, and few tools attempt it. That's the only thing this one
-does.
-
-I want to be careful about scope, since over-claiming would undercut the whole
-idea. Groundcheck confirms that the *evidence* a claim rests on is real and
-says what it's quoted to say. It doesn't judge whether a claim is semantically
-true. "This quote is on the cited page" is checkable. "The page's argument is
-correct" isn't, and pretending won't change that. Every tool returns one of
-three verdicts. When it can't tell, it says `unverifiable`.
+## 1. The three verdicts
 
 | verdict | meaning |
 |---|---|
@@ -129,7 +117,7 @@ the matching line or the computed value. That's what makes a verdict auditable.
 
 Each row above is a real call to the same function the server exposes. That
 includes the arXiv lookups that need the network. The refutations are real
-too. The first row is the `3.7 x 1400` error from section 3, reproduced.
+too. The first row is the `3.7 x 1400` error from the [background notes](docs/background.md), reproduced.
 
 ### 2.2 The case corpus
 
@@ -150,22 +138,7 @@ The same three tables as bars, counted from the TSV files. Every table has cases
 
 `verify/verify.sh` recomputes these verdicts in SQL, C, Go, R, Rust and Node, without sharing the server's code. The build stops if any of them disagrees.
 
-## 3. It caught a mistake in its own author's work
-
-I wrote `check_citation` because made-up arXiv ids that looked plausible kept
-slipping into research write-ups. They look right and resolve to nothing.
-`check_math` exists because `3.7 × 1400` was written as `8880` in a hardware
-deck. It's actually 5180. `check_repo` grew out of a claim-checker for my
-profile README that compares every quoted number with the repo it came from.
-So each tool started as a mistake that really happened.
-
-One thing surprised me. While testing, I assumed arXiv `2606.01992` was
-fabricated and expected `refuted`. The tool returned `checked`. It was right
-and I was wrong, because it's a real June-2026 paper. The verifier caught my
-own bad assumption, and that's exactly why I wanted verification grounded in a
-source.
-
-## 4. Use it
+## 3. Use it
 
 ```bash
 pip install -e .          # or: pip install -r requirements.txt
@@ -186,7 +159,7 @@ For Gemini CLI or any other MCP host, it's the same stdio server. Point your
 host's MCP config at `python -m src.groundcheck.server`. MCP is why one
 connector can serve both.
 
-## 5. Security
+## 4. Security
 
 `check_code` runs the code you give it in a subprocess. It uses list-form
 `subprocess`, so there's no shell and nothing to inject, and it kills the
@@ -194,10 +167,10 @@ process on timeout. It isn't sandboxed from the network or the filesystem,
 though. Only pass code you'd run yourself. The other four tools are read-only
 (HTTP GET, file read, arithmetic).
 
-## 6. Limitations
+## 5. Limitations
 
-This checks grounding. It doesn't check truth, and that's by design (see Scope
-above).
+This checks grounding. It doesn't check truth, and that's by design (see the
+Abstract).
 
 Quote matching is exact, apart from normalising whitespace. A paraphrase that
 means the same thing returns `refuted`. Deciding that two sentences "mean the
@@ -210,7 +183,7 @@ never gives a false `checked`.
 Citations only go through arXiv and Crossref. Other registries aren't wired up
 yet.
 
-## 7. Licence
+## 6. Licence
 
 MIT, see [LICENSE](LICENSE).
 
